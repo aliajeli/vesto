@@ -55,28 +55,41 @@
 
 ## راه‌اندازی
 
+فقط دو دستور:
+
 ```bash
-# ۱) نصب وابستگی‌ها
 npm install
-
-# ۲) ساخت فایل محیطی
-cp .env.example .env
-
-# ۳) تولید کلیدهای امن و قرار دادن در .env
-openssl rand -hex 32   # برای AUTH_SECRET
-openssl rand -hex 32   # برای PAYMENT_HMAC_SECRET
-
-# ۴) ساخت دیتابیس
-npx prisma db push
-
-# ۵) داده نمونه (اختیاری ولی توصیه‌شده)
-npm run seed
-
-# ۶) اجرا
+npm run setup     # ساخت .env با کلیدهای تصادفی + ساخت دیتابیس + داده نمونه
 npm run dev
 ```
 
 سایت روی `http://localhost:3000` و پنل روی `http://localhost:3000/admin/panel` بالا می‌آید.
+
+> **چرا `npm run setup` لازم است؟**
+> فایل `.env` حاوی کلیدهای محرمانه است و عمداً در گیت نگهداری **نمی‌شود**. بنابراین
+> بعد از هر `git clone` باید یک‌بار اجرا شود. اگر فراموشش کنید، `npm run dev`
+> با یک پیام راهنمای فارسی متوقف می‌شود (نه خطای مبهم Prisma).
+
+<details>
+<summary>راه‌اندازی دستی (اگر ترجیح می‌دهید مرحله‌به‌مرحله باشد)</summary>
+
+```bash
+npm install
+cp .env.example .env
+
+# تولید کلیدهای امن و جایگذاری در .env
+openssl rand -hex 32   # برای AUTH_SECRET
+openssl rand -hex 32   # برای PAYMENT_HMAC_SECRET
+# روی ویندوز بدون openssl:
+#   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+npx prisma generate
+npx prisma db push
+npm run seed
+npm run dev
+```
+
+</details>
 
 ### حساب‌های نمونه (پس از seed)
 
@@ -93,11 +106,13 @@ npm run dev
 
 | فرمان | توضیح |
 |---|---|
+| `npm run setup` | **راه‌اندازی کامل**: ساخت `.env` + دیتابیس + داده نمونه |
 | `npm run dev` | اجرای محیط توسعه |
-| `npm run build` | ساخت نسخه عملیاتی |
+| `npm run build` | ساخت نسخه عملیاتی (شامل `prisma generate`) |
 | `npm start` | اجرای نسخه ساخته‌شده |
 | `npm run seed` | پر کردن دیتابیس با داده نمونه |
 | `npm run db:push` | همگام‌سازی اسکیمای Prisma با دیتابیس |
+| `npm run db:reset` | پاک‌سازی کامل دیتابیس و ساخت دوباره داده نمونه |
 
 ---
 
@@ -144,6 +159,48 @@ datasource db {
 ```
 
 متغیرهای محیطی لازم: `DATABASE_URL`، `AUTH_SECRET`، `PAYMENT_HMAC_SECRET`، `NEXT_PUBLIC_SITE_URL`.
+
+> **نکته درباره Vercel:** فایل‌سیستم Vercel فقط‌خواندنی و موقتی است، پس SQLite
+> آنجا کار نمی‌کند. حتماً یک دیتابیس PostgreSQL (مثل Neon یا Vercel Postgres)
+> بسازید و `provider` را طبق بالا تغییر دهید.
+
+---
+
+## رفع اشکال
+
+<div align="right">
+
+**`Environment variable not found: DATABASE_URL`**
+
+فایل `.env` وجود ندارد. این فایل در گیت نگهداری نمی‌شود، پس بعد از `git clone`
+یک‌بار اجرا کنید:
+
+```bash
+npm run setup
+```
+
+**`The table main.Product does not exist`**
+
+دیتابیس ساخته شده ولی جدولی داخلش نیست:
+
+```bash
+npx prisma db push && npm run seed
+```
+
+**`متغیر محیطی AUTH_SECRET تنظیم نشده یا کوتاه است`** (هنگام build یا در سرور)
+
+در محیط عملیاتی `AUTH_SECRET` و `PAYMENT_HMAC_SECRET` باید دست‌کم ۲۴ کاراکتر
+باشند. در Vercel از بخش Settings ← Environment Variables اضافه کنید.
+
+**بعد از `git pull` سایت خطا می‌دهد**
+
+اگر اسکیمای Prisma تغییر کرده باشد:
+
+```bash
+npm install && npx prisma generate && npx prisma db push
+```
+
+</div>
 
 ---
 

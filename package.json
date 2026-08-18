@@ -8,7 +8,10 @@
     "start": "next start",
     "seed": "node prisma/seed.js",
     "db:push": "prisma db push",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "setup": "node scripts/setup.js && prisma generate && prisma db push --skip-generate && npm run seed",
+    "predev": "node scripts/ensure-env.js",
+    "db:reset": "prisma db push --force-reset --skip-generate && npm run seed"
   },
   "keywords": [],
   "author": "",
