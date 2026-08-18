@@ -1,0 +1,67 @@
+# وابستگی‌ها
+/node_modules
+/.pnp
+.pnp.js
+
+# خروجی build
+/.next/
+/out/
+/build
+/dist
+
+# محیط و اسرار — هرگز کامیت نشود
+.env
+.env.local
+.env.production
+.env.development
+.env*.local
+*.pem
+*.key
+
+# دیتابیس محلی SQLite
+/prisma/*.db
+/prisma/*.db-journal
+/prisma/*.db-wal
+/prisma/*.db-shm
+/prisma/migrations/dev.db*
+
+# لاگ‌ها
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+/logs
+*.log
+
+# تست و ابزار
+/coverage
+/.nyc_output
+/playwright-report
+/test-results
+/blob-report
+/.playwright
+
+# اسکریپت‌های موقت اسکرین‌شات و دیباگ
+/shot.cjs
+/ashot.cjs
+/login.cjs
+/click.cjs
+/dbg.cjs
+/*.tmp.cjs
+
+# سیستم‌عامل و ادیتور
+.DS_Store
+Thumbs.db
+*.swp
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# کش
+.cache
+.turbo
+.eslintcache
+*.tsbuildinfo
+
+# Vercel
+.vercel
