@@ -3,12 +3,18 @@ import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies, headers } from 'next/headers';
 import prisma from './db';
-import { AUTH_SECRET, sha256, randomToken } from './crypto';
+import { getAuthSecret, sha256, randomToken } from './crypto';
 
 const SESSION_COOKIE = 'vesto_session';
 const CSRF_COOKIE = 'vesto_csrf';
 const SESSION_DAYS = 7;
-const key = new TextEncoder().encode(AUTH_SECRET);
+// کلید امضای JWT به‌صورت تنبل ساخته و کش می‌شود تا در زمان build نیازی به
+// وجود AUTH_SECRET نباشد (Vercel متغیرها را در build در اختیار نمی‌گذارد).
+let _key = null;
+function signingKey() {
+  if (!_key) _key = new TextEncoder().encode(getAuthSecret());
+  return _key;
+}
 
 export const cookieOptions = {
   httpOnly: true,
@@ -44,12 +50,12 @@ async function signJwt(payload, expiresAt) {
     .setIssuer('vesto')
     .setAudience('vesto-app')
     .setExpirationTime(Math.floor(expiresAt.getTime() / 1000))
-    .sign(key);
+    .sign(signingKey());
 }
 
 export async function verifyJwt(token) {
   try {
-    const { payload } = await jwtVerify(token, key, {
+    const { payload } = await jwtVerify(token, signingKey(), {
       issuer: 'vesto',
       audience: 'vesto-app',
     });

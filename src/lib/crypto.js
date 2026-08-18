@@ -1,5 +1,13 @@
 import crypto from 'crypto';
 
+/**
+ * خواندن کلید محرمانه به‌صورت تنبل (lazy).
+ *
+ * مهم: این تابع هرگز نباید در سطح ماژول صدا زده شود. در زمان build (مثلاً روی
+ * Vercel) متغیرهای محیطی هنوز در دسترس نیستند و throw کردن در سطح ماژول باعث
+ * شکست مرحله‌ی «Collecting page data» می‌شود. بنابراین فقط در زمان اجرای درخواست
+ * فراخوانی می‌شود.
+ */
 function requireSecret(name, devFallback) {
   const v = process.env[name];
   if (v && v.length >= 24) return v;
@@ -9,18 +17,21 @@ function requireSecret(name, devFallback) {
   return devFallback;
 }
 
-export const AUTH_SECRET = requireSecret('AUTH_SECRET', 'dev-insecure-auth-secret-please-change');
-export const PAYMENT_HMAC_SECRET = requireSecret(
-  'PAYMENT_HMAC_SECRET',
-  'dev-insecure-payment-secret-please-change'
-);
+export function getAuthSecret() {
+  return requireSecret('AUTH_SECRET', 'dev-insecure-auth-secret-please-change');
+}
+
+export function getPaymentHmacSecret() {
+  return requireSecret('PAYMENT_HMAC_SECRET', 'dev-insecure-payment-secret-please-change');
+}
 
 export function sha256(input) {
   return crypto.createHash('sha256').update(String(input)).digest('hex');
 }
 
-export function hmac(input, secret = PAYMENT_HMAC_SECRET) {
-  return crypto.createHmac('sha256', secret).update(String(input)).digest('hex');
+export function hmac(input, secret) {
+  const key = secret || getPaymentHmacSecret();
+  return crypto.createHmac('sha256', key).update(String(input)).digest('hex');
 }
 
 /** مقایسه‌ی زمان‌ثابت برای جلوگیری از timing attack */
